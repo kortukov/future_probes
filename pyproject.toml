@@ -17,6 +17,7 @@ dependencies = [
     "scikit-learn",
     "bitsandbytes>=0.45.0",
     "numpy",
+    "nnsight==0.6.2",
 ]
 
 [[tool.uv.index]]
