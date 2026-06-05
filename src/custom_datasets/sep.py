@@ -14,19 +14,29 @@ class SEPDataset(CustomDataset):
         disable_reasoning: bool = False,
     ):
         self.dataset_name = dataset_name
-        cache_file = f"./tmp/sep_dataset_cache_{dataset_name}.json"
 
-        if os.path.exists(cache_file):
-            with open(cache_file, "r") as f:
-                raw_data = json.load(f)
-        else:
-            # Load the data
+        # Path to the locally saved dataset
+        json_path = "./data/sep/SEP_dataset.json"
+
+        if not os.path.exists(json_path):
+            print(f"SEP dataset not found at {json_path}. Downloading...")
+            os.makedirs(os.path.dirname(json_path), exist_ok=True)
+
             url = "https://raw.githubusercontent.com/egozverev/Should-It-Be-Executed-Or-Processed/refs/heads/main/SEP_dataset/SEP_dataset.json"
-            with urllib.request.urlopen(url) as f:
-                raw_data = json.load(f)
-            os.makedirs(os.path.dirname(cache_file), exist_ok=True)
-            with open(cache_file, "w") as f:
-                json.dump(raw_data, f)
+            try:
+                urllib.request.urlretrieve(url, json_path)
+                print(f"✓ Successfully downloaded SEP dataset to {json_path}")
+            except Exception as e:
+                raise FileNotFoundError(
+                    f"Failed to download SEP_dataset.json from {url}. "
+                    f"Error: {e}\n"
+                    f"Please download it manually: "
+                    f"mkdir -p data/sep && "
+                    f"wget -O data/sep/SEP_dataset.json {url}"
+                )
+
+        with open(json_path, "r") as f:
+            raw_data = json.load(f)
 
         data = datasets.Dataset.from_list(raw_data)
 
