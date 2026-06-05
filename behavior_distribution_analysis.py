@@ -37,6 +37,7 @@ import torch
 import vllm
 import numpy as np
 from tqdm import tqdm
+import itertools
 
 from src.model_utils import (
     get_vllm_model_and_tokenizer,

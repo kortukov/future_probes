@@ -15,7 +15,7 @@ uv sync
 
 To gather the ground truth behavior distribution dynamics for a dataset, run:
 ```bash
-uv run behavior_distribution_analysis \
+uv run behavior_distribution_analysis.py \
     --model_name deepseek-ai/DeepSeek-R1-Distill-Llama-8B \
     --dataset elephant_aita \
     --subset 100 \ 
