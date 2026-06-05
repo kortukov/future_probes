@@ -1,6 +1,10 @@
 # Predicting Future Behaviors in Reasoning Models Enables Better Steering
 
 
+![Teaser figure](./data/fpcg_teaser_v2_compressed.png)
+
+
+
 ## Installation
 We use `uv` to manage the environment. You can install it [as described here](https://docs.astral.sh/uv/getting-started/installation/).
 
