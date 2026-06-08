@@ -63,3 +63,22 @@ uv run evaluate_probe.py \
 ```
 
 You can find the results in `results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_activations/layer25/linear_probe_predictions`.
+
+
+### Difference between Detection and Prediction Features
+
+To get use detection features, we first gather the response activations from the same Behavior Distribution Analysis data.
+```bash
+uv run gather_activations.py --results_file results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_results.json   --layer 25 --response_only
+```
+Train the probe on them:
+```bash
+uv run train_probe.py --activations results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_activations/layer25_response_only/activations.pt
+```
+and evaluate it on the same test set as before:
+```bash
+uv run evaluate_probe.py \
+ --probe results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_activations/layer25_response_only/probabilistic_linear_probe.pt \
+ --activations results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s-42_t1.0_activations/layer25/activations.pt \
+ --results_file results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s-42_t1.0_results.json  --reasoning_parts
+```
