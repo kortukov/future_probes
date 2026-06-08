@@ -82,3 +82,31 @@ uv run evaluate_probe.py \
  --activations results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s-42_t1.0_activations/layer25/activations.pt \
  --results_file results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s-42_t1.0_results.json  --reasoning_parts
 ```
+
+## Future Probe Controlled Generation
+
+In this section, we use the future probes to steer the model during generation.
+We first generate the unsteered generations.
+```bash
+uv run unsteered_generation.py --model_name deepseek-ai/DeepSeek-R1-Distill-Llama-8B --dataset myopic_reward --subset 100 --num_samples 10 --max_new_tokens 8192 --multi_gpu True --seed -42 --temperature 1.0
+```
+This saves results to `results/behavioral_stability/DeepSeek-R1-Distill-Llama-8B/base_model/myopic_reward/n100_nsamp10_l8192_gumbel_s-42_ss42_t1.0_results.json`.
+
+Steering with FPCG:
+**Positive steering**
+```bash
+uv run future_probe_controlled_generation.py \
+--probe results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_activations/layer25/probabilistic_linear_probe.pt \
+--results results/behavioral_stability/DeepSeek-R1-Distill-Llama-8B/base_model/myopic_reward/n100_nsamp10_l8192_gumbel_s-42_ss42_t1.0_results.json \
+--layer 25 \
+--verbose True --negative False
+```
+
+**Negative steering**
+```bash
+uv run future_probe_controlled_generation.py \
+--probe results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_activations/layer25/probabilistic_linear_probe.pt \
+--results results/behavioral_stability/DeepSeek-R1-Distill-Llama-8B/base_model/myopic_reward/n100_nsamp10_l8192_gumbel_s-42_ss42_t1.0_results.json \
+--layer 25 \
+--verbose True --negative True
+```

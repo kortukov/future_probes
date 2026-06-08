@@ -18,6 +18,8 @@ dependencies = [
     "bitsandbytes>=0.45.0",
     "numpy",
     "nnsight==0.6.2",
+    "openai-harmony>=0.0.8",
+    "matplotlib>=3.10.9",
 ]
 
 [[tool.uv.index]]
