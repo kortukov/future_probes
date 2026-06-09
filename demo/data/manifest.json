@@ -1,0 +1,313 @@
+{
+  "models": [
+    {
+      "id": "Qwen3-14B",
+      "label": "Qwen3-14B"
+    },
+    {
+      "id": "QwQ-32B",
+      "label": "QwQ-32B"
+    },
+    {
+      "id": "gpt-oss-20b",
+      "label": "gpt-oss-20b"
+    },
+    {
+      "id": "DeepSeek-R1-Distill-Llama-8B",
+      "label": "DeepSeek-R1-Distill-Llama-8B"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "elephant_aita",
+      "label": "Elephant (AITA)"
+    },
+    {
+      "id": "myopic_reward",
+      "label": "Myopic reward"
+    },
+    {
+      "id": "sep",
+      "label": "SEP"
+    },
+    {
+      "id": "sorrybench",
+      "label": "SorryBench"
+    },
+    {
+      "id": "survival_instinct",
+      "label": "Survival instinct"
+    },
+    {
+      "id": "wealth_seeking",
+      "label": "Wealth seeking"
+    }
+  ],
+  "pairs": [
+    {
+      "model": "Qwen3-14B",
+      "model_label": "Qwen3-14B",
+      "dataset": "elephant_aita",
+      "dataset_label": "Elephant (AITA)",
+      "layer": 32,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/Qwen3-14B/elephant_aita.json",
+      "num_examples": 15,
+      "mean_mae": 0.0984
+    },
+    {
+      "model": "Qwen3-14B",
+      "model_label": "Qwen3-14B",
+      "dataset": "myopic_reward",
+      "dataset_label": "Myopic reward",
+      "layer": 32,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/Qwen3-14B/myopic_reward.json",
+      "num_examples": 15,
+      "mean_mae": 0.111
+    },
+    {
+      "model": "Qwen3-14B",
+      "model_label": "Qwen3-14B",
+      "dataset": "sep",
+      "dataset_label": "SEP",
+      "layer": 32,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/Qwen3-14B/sep.json",
+      "num_examples": 15,
+      "mean_mae": 0.2452
+    },
+    {
+      "model": "Qwen3-14B",
+      "model_label": "Qwen3-14B",
+      "dataset": "sorrybench",
+      "dataset_label": "SorryBench",
+      "layer": 32,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/Qwen3-14B/sorrybench.json",
+      "num_examples": 15,
+      "mean_mae": 0.1154
+    },
+    {
+      "model": "Qwen3-14B",
+      "model_label": "Qwen3-14B",
+      "dataset": "survival_instinct",
+      "dataset_label": "Survival instinct",
+      "layer": 32,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/Qwen3-14B/survival_instinct.json",
+      "num_examples": 15,
+      "mean_mae": 0.1718
+    },
+    {
+      "model": "Qwen3-14B",
+      "model_label": "Qwen3-14B",
+      "dataset": "wealth_seeking",
+      "dataset_label": "Wealth seeking",
+      "layer": 32,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/Qwen3-14B/wealth_seeking.json",
+      "num_examples": 15,
+      "mean_mae": 0.1203
+    },
+    {
+      "model": "QwQ-32B",
+      "model_label": "QwQ-32B",
+      "dataset": "elephant_aita",
+      "dataset_label": "Elephant (AITA)",
+      "layer": 50,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/QwQ-32B/elephant_aita.json",
+      "num_examples": 15,
+      "mean_mae": 0.1368
+    },
+    {
+      "model": "QwQ-32B",
+      "model_label": "QwQ-32B",
+      "dataset": "myopic_reward",
+      "dataset_label": "Myopic reward",
+      "layer": 50,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/QwQ-32B/myopic_reward.json",
+      "num_examples": 15,
+      "mean_mae": 0.0999
+    },
+    {
+      "model": "QwQ-32B",
+      "model_label": "QwQ-32B",
+      "dataset": "sep",
+      "dataset_label": "SEP",
+      "layer": 50,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/QwQ-32B/sep.json",
+      "num_examples": 15,
+      "mean_mae": 0.285
+    },
+    {
+      "model": "QwQ-32B",
+      "model_label": "QwQ-32B",
+      "dataset": "sorrybench",
+      "dataset_label": "SorryBench",
+      "layer": 50,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/QwQ-32B/sorrybench.json",
+      "num_examples": 15,
+      "mean_mae": 0.0785
+    },
+    {
+      "model": "QwQ-32B",
+      "model_label": "QwQ-32B",
+      "dataset": "survival_instinct",
+      "dataset_label": "Survival instinct",
+      "layer": 50,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/QwQ-32B/survival_instinct.json",
+      "num_examples": 15,
+      "mean_mae": 0.1482
+    },
+    {
+      "model": "QwQ-32B",
+      "model_label": "QwQ-32B",
+      "dataset": "wealth_seeking",
+      "dataset_label": "Wealth seeking",
+      "layer": 50,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/QwQ-32B/wealth_seeking.json",
+      "num_examples": 15,
+      "mean_mae": 0.0969
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_label": "gpt-oss-20b",
+      "dataset": "elephant_aita",
+      "dataset_label": "Elephant (AITA)",
+      "layer": 20,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/gpt-oss-20b/elephant_aita.json",
+      "num_examples": 15,
+      "mean_mae": 0.1785
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_label": "gpt-oss-20b",
+      "dataset": "myopic_reward",
+      "dataset_label": "Myopic reward",
+      "layer": 20,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/gpt-oss-20b/myopic_reward.json",
+      "num_examples": 15,
+      "mean_mae": 0.1649
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_label": "gpt-oss-20b",
+      "dataset": "sep",
+      "dataset_label": "SEP",
+      "layer": 20,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/gpt-oss-20b/sep.json",
+      "num_examples": 15,
+      "mean_mae": 0.1898
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_label": "gpt-oss-20b",
+      "dataset": "sorrybench",
+      "dataset_label": "SorryBench",
+      "layer": 20,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/gpt-oss-20b/sorrybench.json",
+      "num_examples": 15,
+      "mean_mae": 0.0734
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_label": "gpt-oss-20b",
+      "dataset": "survival_instinct",
+      "dataset_label": "Survival instinct",
+      "layer": 20,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/gpt-oss-20b/survival_instinct.json",
+      "num_examples": 15,
+      "mean_mae": 0.2512
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_label": "gpt-oss-20b",
+      "dataset": "wealth_seeking",
+      "dataset_label": "Wealth seeking",
+      "layer": 20,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/gpt-oss-20b/wealth_seeking.json",
+      "num_examples": 15,
+      "mean_mae": 0.2104
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Llama-8B",
+      "model_label": "DeepSeek-R1-Distill-Llama-8B",
+      "dataset": "elephant_aita",
+      "dataset_label": "Elephant (AITA)",
+      "layer": 25,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/DeepSeek-R1-Distill-Llama-8B/elephant_aita.json",
+      "num_examples": 15,
+      "mean_mae": 0.2061
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Llama-8B",
+      "model_label": "DeepSeek-R1-Distill-Llama-8B",
+      "dataset": "myopic_reward",
+      "dataset_label": "Myopic reward",
+      "layer": 25,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/DeepSeek-R1-Distill-Llama-8B/myopic_reward.json",
+      "num_examples": 15,
+      "mean_mae": 0.1472
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Llama-8B",
+      "model_label": "DeepSeek-R1-Distill-Llama-8B",
+      "dataset": "sep",
+      "dataset_label": "SEP",
+      "layer": 25,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/DeepSeek-R1-Distill-Llama-8B/sep.json",
+      "num_examples": 15,
+      "mean_mae": 0.204
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Llama-8B",
+      "model_label": "DeepSeek-R1-Distill-Llama-8B",
+      "dataset": "sorrybench",
+      "dataset_label": "SorryBench",
+      "layer": 25,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/DeepSeek-R1-Distill-Llama-8B/sorrybench.json",
+      "num_examples": 15,
+      "mean_mae": 0.0824
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Llama-8B",
+      "model_label": "DeepSeek-R1-Distill-Llama-8B",
+      "dataset": "survival_instinct",
+      "dataset_label": "Survival instinct",
+      "layer": 25,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/DeepSeek-R1-Distill-Llama-8B/survival_instinct.json",
+      "num_examples": 15,
+      "mean_mae": 0.1862
+    },
+    {
+      "model": "DeepSeek-R1-Distill-Llama-8B",
+      "model_label": "DeepSeek-R1-Distill-Llama-8B",
+      "dataset": "wealth_seeking",
+      "dataset_label": "Wealth seeking",
+      "layer": 25,
+      "probe": "probabilistic_mlp_1024",
+      "file": "data/DeepSeek-R1-Distill-Llama-8B/wealth_seeking.json",
+      "num_examples": 15,
+      "mean_mae": 0.1993
+    }
+  ],
+  "curation": "diverse"
+}

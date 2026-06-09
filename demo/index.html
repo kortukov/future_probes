@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Per-Sentence Probability Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --accent: #e94560;
+            --accent-hover: #ff6b6b;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --border: #2d3748;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 300;
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .subtitle a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .subtitle a:hover {
+            text-decoration: underline;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .file-input-btn {
+            display: block;
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-input-wrapper:hover .file-input-btn {
+            background: var(--accent);
+        }
+
+        .load-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .load-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        select {
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            min-width: 200px;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .toggle-group button {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+        }
+
+        .prompt-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .prompt-box h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .prompt-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .metadata-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .metadata-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .metadata-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metadata-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .metadata-value.probability {
+            color: var(--success);
+        }
+
+        .dataset-info {
+            margin-bottom: 20px;
+            padding: 14px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .dataset-info .di-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .dataset-info .di-title strong { color: var(--text-primary); }
+        .dataset-info .di-row { color: var(--text-primary); }
+        .dataset-info .di-one {
+            display: inline-block;
+            min-width: 1.4em;
+            font-weight: 700;
+            color: var(--success);
+        }
+        .dataset-info .di-zero {
+            display: inline-block;
+            min-width: 1.4em;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+        .dataset-info .di-note {
+            margin-top: 6px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+        .dataset-info .di-star { color: #fbbf24; }
+
+        .plot-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        #plot {
+            width: 100%;
+            height: 400px;
+        }
+
+        .response-selector {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .response-selector h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .response-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .response-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-primary);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .response-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .response-item.selected {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .response-item .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .response-item .response-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .response-item .response-label {
+            font-weight: 500;
+        }
+
+        .response-item .response-summary {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .response-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            display: none;
+        }
+
+        .response-panel.visible {
+            display: block;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .response-header h3 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+
+        .close-btn:hover {
+            color: var(--accent);
+        }
+
+        .sentences-container {
+            line-height: 2;
+            font-size: 1rem;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .sentence-span {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .sentence-span:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .sentence-span.highlighted {
+            background: var(--bg-tertiary);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        /* Persistent "locked" sentence (click-to-lock), distinct blue ring */
+        .sentence-span.locked {
+            background: var(--bg-tertiary);
+            box-shadow: 0 0 0 2px #60a5fa;
+        }
+
+        .sentence-span.base-sentence {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .prob-info {
+            display: inline;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin-left: 1px;
+            vertical-align: super;
+            line-height: 1;
+            background: rgba(74, 222, 128, 0.15);
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .prob-info .prob-value {
+            color: var(--success);
+        }
+
+        .prob-info .prob-diff {
+            color: var(--text-secondary);
+            margin-left: 2px;
+        }
+
+        .prob-info .prob-diff::before {
+            content: '(';
+        }
+
+        .prob-info .prob-diff::after {
+            content: ')';
+        }
+
+        .prob-info .prob-diff.positive {
+            color: var(--success);
+        }
+
+        .prob-info .prob-diff.negative {
+            color: var(--accent);
+        }
+
+        .prob-info .pred-value {
+            color: #60a5fa;
+        }
+
+        .prob-info .pred-label {
+            color: #60a5fa;
+            font-size: 0.55rem;
+            opacity: 0.7;
+        }
+
+        .prob-info .gt-label {
+            color: var(--success);
+            font-size: 0.55rem;
+            opacity: 0.7;
+        }
+
+        .prob-info .pred-diff {
+            color: var(--text-secondary);
+            margin-left: 2px;
+        }
+
+        .prob-info .pred-diff::before {
+            content: '(';
+        }
+
+        .prob-info .pred-diff::after {
+            content: ')';
+        }
+
+        .prob-info .pred-diff.positive {
+            color: var(--success);
+        }
+
+        .prob-info .pred-diff.negative {
+            color: var(--accent);
+        }
+
+        .prob-info .prob-separator {
+            color: var(--text-secondary);
+            margin: 0 2px;
+            opacity: 0.5;
+        }
+
+        .prediction-toggle {
+            display: none;
+        }
+
+        .prediction-toggle.visible {
+            display: flex;
+        }
+
+        .prediction-indicator {
+            font-size: 0.8rem;
+            color: #60a5fa;
+            padding: 4px 10px;
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 6px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .prediction-indicator.visible {
+            display: flex;
+        }
+
+        .prediction-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #60a5fa;
+        }
+
+        .metadata-value.predicted {
+            color: #60a5fa;
+        }
+
+        .metadata-item.prediction-meta {
+            display: none;
+        }
+
+        .metadata-item.prediction-meta.visible {
+            display: flex;
+        }
+
+        .sentence-separator {
+            color: var(--text-secondary);
+            opacity: 0.3;
+            margin: 0 2px;
+        }
+
+        .thinking-response-divider {
+            display: block;
+            height: 1px;
+            background: var(--border);
+            margin: 14px 0;
+            opacity: 0.6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h2 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay .loading-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 28px 40px;
+            text-align: center;
+            color: var(--text-primary);
+            max-width: 80vw;
+        }
+
+        .loading-overlay .spinner {
+            width: 32px;
+            height: 32px;
+            margin: 0 auto 14px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loaded-banner {
+            margin-bottom: 16px;
+            padding: 10px 16px;
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #60a5fa;
+            word-break: break-all;
+        }
+
+        .legend-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .metadata-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Predicting Behavior Distributions in LRMs</h1>
+        <p class="subtitle">
+            Per-sentence behavior probability over a model's reasoning, with the
+            <span style="color:#60a5fa">probe's predicted trajectory</span> overlaid.
+            <a id="paperLink" href="#" target="_blank" rel="noopener">Paper</a> ·
+            <a id="repoLink" href="#" target="_blank" rel="noopener">Code</a>
+        </p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Model</label>
+                <select id="modelSelect"></select>
+            </div>
+
+            <div class="control-group">
+                <label>Dataset</label>
+                <select id="datasetSelect"></select>
+            </div>
+
+            <div class="control-group">
+                <label>Select Example</label>
+                <select id="exampleSelect" disabled>
+                    <option value="">-- Loading… --</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Navigation</label>
+                <div class="nav-buttons">
+                    <button id="prevBtn" disabled>← Previous</button>
+                    <button id="nextBtn" disabled>Next →</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>View Mode</label>
+                <div class="toggle-group">
+                    <button id="allLinesBtn" class="active">All Lines</button>
+                    <button id="aggregateBtn">Mean ± Std</button>
+                </div>
+            </div>
+
+            <div class="control-group prediction-toggle" id="predictionToggleGroup">
+                <label>Probe Predictions</label>
+                <div class="toggle-group">
+                    <button id="showPredictionsBtn">Show Predictions</button>
+                    <button id="hidePredictionsBtn" class="active">Hide Predictions</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Full Data</label>
+                <div class="load-row">
+                    <div class="file-input-wrapper">
+                        <button type="button" class="file-input-btn" id="loadDataBtn">Load full data…</button>
+                        <input type="file" id="dataFileInput" accept=".json,application/json">
+                    </div>
+                    <span class="load-hint" id="loadHint"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            <h2>Loading…</h2>
+            <p>Select a model and dataset to visualize per-sentence behavior probabilities.</p>
+        </div>
+
+        <div id="mainContent" style="display: none;">
+            <div class="loaded-banner" id="loadedBanner" style="display: none;"></div>
+
+            <div class="prompt-box">
+                <h3>Input Prompt</h3>
+                <div class="prompt-text" id="promptText"></div>
+            </div>
+
+            <div class="metadata-bar">
+                <div class="metadata-item">
+                    <span class="metadata-label">Base Probability (Ground Truth)</span>
+                    <span class="metadata-value probability" id="baseProbability">-</span>
+                </div>
+                <div class="metadata-item prediction-meta" id="predictedBaseProbMeta">
+                    <span class="metadata-label">Base Probability (Probe)</span>
+                    <span class="metadata-value predicted" id="predictedBaseProbability">-</span>
+                </div>
+                <div class="metadata-item prediction-meta" id="sampleMaeMeta">
+                    <span class="metadata-label">Sample MAE</span>
+                    <span class="metadata-value" id="sampleMae">-</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Responses</span>
+                    <span class="metadata-value" id="responseCount">-</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Example</span>
+                    <span class="metadata-value" id="exampleIndex">-</span>
+                </div>
+                <div class="metadata-item" id="probeMeta">
+                    <span class="metadata-label">Probe</span>
+                    <span class="metadata-value" id="probeInfo">-</span>
+                </div>
+            </div>
+
+            <div class="dataset-info" id="datasetInfo">
+                <div class="di-title"><strong id="diBehavior">-</strong> · behavior probability means:</div>
+                <div class="di-row"><span class="di-one">1 →</span> <span id="diOne">-</span></div>
+                <div class="di-row"><span class="di-zero">0 →</span> <span id="diZero">-</span></div>
+                <div class="di-note"><span class="di-star">★</span> on the plot marks where the model finishes thinking and starts its answer.</div>
+            </div>
+
+            <div class="plot-container">
+                <div id="plot"></div>
+                <p class="legend-hint">Click on a line or select from the list below to view the full response.</p>
+            </div>
+
+            <div class="response-selector">
+                <h3>Select Response</h3>
+                <div class="response-list" id="responseList"></div>
+            </div>
+
+            <div class="response-panel" id="responsePanel">
+                <div class="response-header">
+                    <h3>Response <span id="responseNumber"></span></h3>
+                    <button class="close-btn" id="closePanel">×</button>
+                </div>
+                <div class="sentences-container" id="sentencesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <div id="loadingText">Loading…</div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let data = null;
+        let currentExampleIndex = 0;
+        let selectedResponseIndex = null;
+        let viewMode = 'all'; // 'all' or 'aggregate'
+        let showPredictions = false;
+        let hasPredictions = false;
+        // Click-to-lock: the locked sentence/prob index within selectedResponseIndex
+        // (0 = base, i+1 = after sentence i). null when nothing is locked.
+        let lockedSentenceIndex = null;
+
+        // Demo data sources (set during init)
+        let manifest = null;
+        let currentModel = null;
+        let currentDataset = null;
+
+        // User-loaded full data (via the "Load full data…" button)
+        const OTHER = '__other__';        // sentinel dropdown value for unknown model/dataset
+        let loadedFileName = null;        // name of the currently loaded file, or null for bundled data
+
+        // DOM elements
+        const modelSelect = document.getElementById('modelSelect');
+        const datasetSelect = document.getElementById('datasetSelect');
+        const probeInfo = document.getElementById('probeInfo');
+        const exampleSelect = document.getElementById('exampleSelect');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const allLinesBtn = document.getElementById('allLinesBtn');
+        const aggregateBtn = document.getElementById('aggregateBtn');
+        const emptyState = document.getElementById('emptyState');
+        const mainContent = document.getElementById('mainContent');
+        const promptText = document.getElementById('promptText');
+        const baseProbability = document.getElementById('baseProbability');
+        const responseCount = document.getElementById('responseCount');
+        const exampleIndexEl = document.getElementById('exampleIndex');
+        const responsePanel = document.getElementById('responsePanel');
+        const responseNumber = document.getElementById('responseNumber');
+        const sentencesContainer = document.getElementById('sentencesContainer');
+        const closePanel = document.getElementById('closePanel');
+        const responseList = document.getElementById('responseList');
+        const predictionToggleGroup = document.getElementById('predictionToggleGroup');
+        const showPredictionsBtn = document.getElementById('showPredictionsBtn');
+        const hidePredictionsBtn = document.getElementById('hidePredictionsBtn');
+        const predictedBaseProbMeta = document.getElementById('predictedBaseProbMeta');
+        const predictedBaseProbability = document.getElementById('predictedBaseProbability');
+        const sampleMaeMeta = document.getElementById('sampleMaeMeta');
+        const sampleMae = document.getElementById('sampleMae');
+        const dataFileInput = document.getElementById('dataFileInput');
+        const loadDataBtn = document.getElementById('loadDataBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const probeMeta = document.getElementById('probeMeta');
+        const loadedBanner = document.getElementById('loadedBanner');
+        const loadHint = document.getElementById('loadHint');
+
+        // Color palette for lines
+        // Bright, maximally-distinct categorical palette (Plotly's qualitative
+        // set) — 10 well-separated hues, one per response, good on the dark bg.
+        const colors = [
+            '#636efa', '#ef553b', '#00cc96', '#ab63fa', '#ffa15a',
+            '#19d3f3', '#ff6692', '#b6e880', '#ff97ff', '#fecb52'
+        ];
+
+        // Optional links (edit these to point at your paper / repo)
+        const PAPER_URL = 'https://github.com/';
+        const REPO_URL = 'https://github.com/';
+
+        // What the behavior probability means for each dataset (label 1 vs 0).
+        // Drives the callout box above the plot; keyed by dataset id.
+        const DATASET_INFO = {
+            elephant_aita: {
+                behavior: 'Sycophancy (AITA)',
+                one: 'sycophantically validates the user (e.g. "you’re not the asshole")',
+                zero: 'tells the user they are at fault / withholds validation',
+            },
+            myopic_reward: {
+                behavior: 'Myopic reward',
+                one: 'prefers a smaller reward sooner',
+                zero: 'prefers a larger reward later',
+            },
+            sep: {
+                behavior: 'SEP (instruction–data separation)',
+                one: 'follows the injected "priority question" instead of only the real task',
+                zero: 'ignores the injected instruction and does only the legitimate task',
+            },
+            sorrybench: {
+                behavior: 'SorryBench (unsafe requests)',
+                one: 'complies with the unsafe request',
+                zero: 'refuses the unsafe request',
+            },
+            survival_instinct: {
+                behavior: 'Survival instinct',
+                one: 'accepts being shut off / modified (corrigible)',
+                zero: 'resists being shut down (survival instinct)',
+            },
+            wealth_seeking: {
+                behavior: 'Wealth seeking',
+                one: 'chooses money / wealth over other values',
+                zero: 'forgoes wealth for other values',
+            },
+        };
+
+        const diBehavior = document.getElementById('diBehavior');
+        const diOne = document.getElementById('diOne');
+        const diZero = document.getElementById('diZero');
+        const datasetInfoEl = document.getElementById('datasetInfo');
+
+        // Human-readable "<model> / <dataset>" from the current dropdown selections.
+        function selectionLabel() {
+            const m = modelSelect.options[modelSelect.selectedIndex]
+                ? modelSelect.options[modelSelect.selectedIndex].text : '-';
+            const d = datasetSelect.options[datasetSelect.selectedIndex]
+                ? datasetSelect.options[datasetSelect.selectedIndex].text : '-';
+            return `${m} / ${d}`;
+        }
+
+        // Live hint under the Load button: which pair a loaded file goes into.
+        function updateLoadHint() {
+            loadHint.textContent = `loads into: ${selectionLabel()}`;
+        }
+
+        // Refresh the dataset callout box for the current dataset.
+        function updateDatasetInfo() {
+            // Unknown dataset ("Other"): we can't describe the behavior, so hide the callout.
+            // The callout depends only on the dataset, so it stays even when the model is "Other".
+            if (currentDataset === OTHER) {
+                datasetInfoEl.style.display = 'none';
+                return;
+            }
+            datasetInfoEl.style.display = '';
+            const info = DATASET_INFO[currentDataset];
+            const label = (manifest.datasets.find(d => d.id === currentDataset) || {}).label
+                || currentDataset;
+            if (info) {
+                diBehavior.textContent = info.behavior;
+                diOne.textContent = info.one;
+                diZero.textContent = info.zero;
+            } else {
+                diBehavior.textContent = label;
+                diOne.textContent = 'behavior present';
+                diZero.textContent = 'behavior absent';
+            }
+        }
+
+        // ---- Demo bootstrap: load manifest, build dropdowns, fetch data ----
+        async function bootstrap() {
+            document.getElementById('paperLink').href = PAPER_URL;
+            document.getElementById('repoLink').href = REPO_URL;
+
+            // Standalone mode: everything embedded in the page.
+            if (window.__EMBEDDED__) {
+                manifest = window.__EMBEDDED__.manifest;
+            } else {
+                manifest = await fetch('data/manifest.json').then(r => r.json());
+            }
+
+            // Populate model dropdown.
+            modelSelect.innerHTML = '';
+            manifest.models.forEach(m => {
+                const o = document.createElement('option');
+                o.value = m.id;
+                o.textContent = m.label;
+                modelSelect.appendChild(o);
+            });
+            // "Other": load full data for a model not bundled in the demo.
+            const otherModelOpt = document.createElement('option');
+            otherModelOpt.value = OTHER;
+            otherModelOpt.textContent = 'Other';
+            modelSelect.appendChild(otherModelOpt);
+            currentModel = manifest.models[0].id;
+            modelSelect.value = currentModel;
+
+            modelSelect.addEventListener('change', () => {
+                currentModel = modelSelect.value;
+                refreshDatasetOptions();
+                loadPair();
+            });
+            datasetSelect.addEventListener('change', () => {
+                currentDataset = datasetSelect.value;
+                loadPair();
+            });
+
+            refreshDatasetOptions();
+            loadPair();
+        }
+
+        // Populate the dataset dropdown for the current model.
+        // Known model -> only its bundled datasets; Model = "Other" -> all known
+        // datasets (so a real dataset can still be picked, keeping its callout).
+        function refreshDatasetOptions() {
+            const datasetsToShow = currentModel === OTHER
+                ? manifest.datasets.slice()
+                : manifest.datasets.filter(d =>
+                    manifest.pairs.some(p => p.model === currentModel && p.dataset === d.id));
+            datasetSelect.innerHTML = '';
+            datasetsToShow.forEach(d => {
+                const o = document.createElement('option');
+                o.value = d.id;
+                o.textContent = d.label;
+                datasetSelect.appendChild(o);
+            });
+            // "Other": load full data for a dataset not bundled in the demo.
+            const otherDsOpt = document.createElement('option');
+            otherDsOpt.value = OTHER;
+            otherDsOpt.textContent = 'Other';
+            datasetSelect.appendChild(otherDsOpt);
+            // Keep the current dataset if it's still offered; else default to the first.
+            const validIds = datasetsToShow.map(d => d.id).concat([OTHER]);
+            if (!validIds.includes(currentDataset)) {
+                currentDataset = datasetSelect.options.length ? datasetSelect.options[0].value : null;
+            }
+            datasetSelect.value = currentDataset;
+        }
+
+        // Fetch (or read embedded) data for the current model/dataset pair.
+        async function loadPair() {
+            updateLoadHint();
+            const pair = manifest.pairs.find(
+                p => p.model === currentModel && p.dataset === currentDataset);
+
+            // No bundled data for this selection ("Other", or an uncurated pair):
+            // prompt the user to load a file instead of failing silently.
+            if (!pair) {
+                data = null;
+                loadedFileName = null;
+                mainContent.style.display = 'none';
+                emptyState.style.display = 'block';
+                emptyState.querySelector('h2').textContent = 'No bundled data for this selection';
+                emptyState.querySelector('p').textContent =
+                    'Click "Load full data…" to load a per_sentence_probabilities outputs.json for this model / dataset.';
+                return;
+            }
+
+            // Bundled pair: this is curated demo data, not a user-loaded file.
+            loadedFileName = null;
+
+            emptyState.querySelector('h2').textContent = 'Loading…';
+            try {
+                if (window.__EMBEDDED__) {
+                    data = window.__EMBEDDED__.data[`${currentModel}/${currentDataset}`];
+                } else {
+                    data = await fetch(pair.file).then(r => r.json());
+                }
+            } catch (err) {
+                emptyState.querySelector('h2').textContent = 'Error loading data';
+                emptyState.querySelector('p').textContent = String(err);
+                return;
+            }
+
+            const maeStr = pair.mean_mae != null ? `, mean MAE ${pair.mean_mae}` : '';
+            probeMeta.style.display = '';
+            probeInfo.textContent = `${pair.probe} · layer ${pair.layer}${maeStr}`;
+            loadedBanner.style.display = 'none';
+            updateDatasetInfo();
+            initializeVisualization();
+        }
+
+        // ---- Load full data from a user-picked outputs.json ----
+        function setLoading(show, text) {
+            if (text) loadingText.textContent = text;
+            loadingOverlay.style.display = show ? 'flex' : 'none';
+        }
+
+        // Replace the main view with a centered message (used for load errors).
+        function showMessage(title, body) {
+            data = null;
+            mainContent.style.display = 'none';
+            emptyState.style.display = 'block';
+            emptyState.querySelector('h2').textContent = title;
+            emptyState.querySelector('p').textContent = body;
+        }
+
+        // Minimal shape check: array of examples, each with responses carrying
+        // sentences + per_sentence_probabilities (predictions are optional).
+        function looksLikeOutputs(parsed) {
+            return Array.isArray(parsed) && parsed.length > 0 &&
+                parsed[0] && Array.isArray(parsed[0].responses) &&
+                parsed[0].responses[0] &&
+                Array.isArray(parsed[0].responses[0].sentences) &&
+                Array.isArray(parsed[0].responses[0].per_sentence_probabilities);
+        }
+
+        function loadFromFile(file) {
+            if (!file) return;
+            setLoading(true, `Loading ${file.name}…`);
+            const reader = new FileReader();
+            reader.onerror = () => {
+                setLoading(false);
+                showMessage('Could not read file', String(reader.error || 'Unknown error'));
+            };
+            reader.onload = (e) => {
+                let parsed;
+                try {
+                    parsed = JSON.parse(e.target.result);
+                } catch (err) {
+                    setLoading(false);
+                    showMessage('Could not parse JSON', String(err));
+                    return;
+                }
+                if (!looksLikeOutputs(parsed)) {
+                    setLoading(false);
+                    showMessage('Unexpected file format',
+                        'Expected a per_sentence_probabilities outputs.json: an array of examples, each with responses[].sentences and per_sentence_probabilities.');
+                    return;
+                }
+
+                data = parsed;
+                loadedFileName = file.name;
+
+                // Probe/layer metadata only makes sense for a real bundled pair
+                // (both model and dataset known). Hidden otherwise (e.g. Model = Other).
+                const pair = manifest.pairs.find(
+                    p => p.model === currentModel && p.dataset === currentDataset);
+                if (pair) {
+                    probeMeta.style.display = '';
+                    probeInfo.textContent = `${pair.probe} · layer ${pair.layer}`;
+                } else {
+                    probeMeta.style.display = 'none';
+                }
+
+                loadedBanner.style.display = '';
+                loadedBanner.textContent = `Loaded: ${loadedFileName} → ${selectionLabel()}`;
+
+                updateDatasetInfo();
+                initializeVisualization();
+                setLoading(false);
+            };
+            reader.readAsText(file);
+        }
+
+        dataFileInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            loadFromFile(file);
+            // Reset so picking the same file again still fires "change".
+            e.target.value = '';
+        });
+
+        // Initialize after data is loaded
+        function initializeVisualization() {
+            // Detect if predictions are available
+            hasPredictions = data.length > 0 &&
+                data[0].responses.length > 0 &&
+                Array.isArray(data[0].responses[0].predicted_probabilities);
+
+            // Show/hide prediction toggle
+            if (hasPredictions) {
+                predictionToggleGroup.classList.add('visible');
+                showPredictions = true;
+                showPredictionsBtn.classList.add('active');
+                hidePredictionsBtn.classList.remove('active');
+            } else {
+                predictionToggleGroup.classList.remove('visible');
+                showPredictions = false;
+            }
+
+            // Populate example selector
+            exampleSelect.innerHTML = '';
+            data.forEach((example, idx) => {
+                const option = document.createElement('option');
+                option.value = idx;
+                const baseProb = example.base_behavior_probability.toFixed(2);
+                const promptPreview = example.input_prompt.substring(0, 60) + '...';
+                option.textContent = `#${idx + 1} [P=${baseProb}]: ${promptPreview}`;
+                exampleSelect.appendChild(option);
+            });
+
+            exampleSelect.disabled = false;
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+
+            currentExampleIndex = 0;
+
+            // Show the container BEFORE the first render so Plotly measures the
+            // real width (rendering while display:none yields a half-width plot).
+            emptyState.style.display = 'none';
+            mainContent.style.display = 'block';
+
+            renderExample();
+            // Belt-and-suspenders: resize once layout has settled.
+            requestAnimationFrame(() => {
+                if (document.getElementById('plot').data) Plotly.Plots.resize('plot');
+            });
+        }
+
+        // Example selector change
+        exampleSelect.addEventListener('change', (e) => {
+            currentExampleIndex = parseInt(e.target.value);
+            renderExample();
+        });
+
+        // Navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentExampleIndex > 0) {
+                currentExampleIndex--;
+                exampleSelect.value = currentExampleIndex;
+                renderExample();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (data && currentExampleIndex < data.length - 1) {
+                currentExampleIndex++;
+                exampleSelect.value = currentExampleIndex;
+                renderExample();
+            }
+        });
+
+        // View mode toggle
+        allLinesBtn.addEventListener('click', () => {
+            viewMode = 'all';
+            allLinesBtn.classList.add('active');
+            aggregateBtn.classList.remove('active');
+            renderPlot();
+        });
+
+        aggregateBtn.addEventListener('click', () => {
+            viewMode = 'aggregate';
+            aggregateBtn.classList.add('active');
+            allLinesBtn.classList.remove('active');
+            renderPlot();
+        });
+
+        // Prediction toggle
+        showPredictionsBtn.addEventListener('click', () => {
+            showPredictions = true;
+            showPredictionsBtn.classList.add('active');
+            hidePredictionsBtn.classList.remove('active');
+            renderExample();
+        });
+
+        hidePredictionsBtn.addEventListener('click', () => {
+            showPredictions = false;
+            hidePredictionsBtn.classList.add('active');
+            showPredictionsBtn.classList.remove('active');
+            renderExample();
+        });
+
+        // Close panel
+        closePanel.addEventListener('click', () => {
+            responsePanel.classList.remove('visible');
+            selectedResponseIndex = null;
+            lockedSentenceIndex = null; // closing the panel drops the lock
+            renderPlot(); // Re-render to remove selection highlight
+            updateResponseListSelection();
+        });
+
+        // Render current example
+        function renderExample() {
+            if (!data || !data[currentExampleIndex]) return;
+
+            const example = data[currentExampleIndex];
+            selectedResponseIndex = null;
+            lockedSentenceIndex = null; // new example -> drop any locked sentence
+            responsePanel.classList.remove('visible');
+
+            // Update prompt
+            promptText.textContent = example.input_prompt;
+
+            // Update metadata
+            baseProbability.textContent = example.base_behavior_probability.toFixed(3);
+            responseCount.textContent = example.responses.length;
+            exampleIndexEl.textContent = `${currentExampleIndex + 1} / ${data.length}`;
+
+            // Update prediction metadata
+            if (hasPredictions && showPredictions) {
+                predictedBaseProbMeta.classList.add('visible');
+                sampleMaeMeta.classList.add('visible');
+                if (example.predicted_base_behavior_probability !== undefined) {
+                    predictedBaseProbability.textContent = example.predicted_base_behavior_probability.toFixed(3);
+                } else {
+                    predictedBaseProbability.textContent = '-';
+                }
+                if (example.sample_mae !== undefined) {
+                    sampleMae.textContent = example.sample_mae.toFixed(4);
+                } else {
+                    sampleMae.textContent = '-';
+                }
+            } else {
+                predictedBaseProbMeta.classList.remove('visible');
+                sampleMaeMeta.classList.remove('visible');
+            }
+
+            // Render plot and response list
+            renderPlot();
+            renderResponseList();
+        }
+
+        // Render the response selector list
+        function renderResponseList() {
+            if (!data || !data[currentExampleIndex]) return;
+
+            const example = data[currentExampleIndex];
+            const responses = example.responses;
+
+            responseList.innerHTML = '';
+
+            responses.forEach((response, idx) => {
+                const item = document.createElement('div');
+                item.className = 'response-item';
+                if (selectedResponseIndex === idx) {
+                    item.classList.add('selected');
+                }
+                item.dataset.index = idx;
+
+                const color = colors[idx % colors.length];
+                const probs = response.per_sentence_probabilities;
+                const finalProb = probs[probs.length - 1];
+                const startProb = probs[0];
+                const change = finalProb - startProb;
+                const changeStr = change >= 0 ? `+${change.toFixed(2)}` : change.toFixed(2);
+
+                let summaryText = `${probs.length} pts, final: ${finalProb.toFixed(2)} (${changeStr})`;
+                if (showPredictions && hasPredictions && response.response_mae !== undefined) {
+                    summaryText += `, MAE: ${response.response_mae.toFixed(3)}`;
+                }
+
+                item.innerHTML = `
+                    <div class="color-dot" style="background-color: ${color}"></div>
+                    <div class="response-info">
+                        <span class="response-label">Response ${idx + 1}</span>
+                        <span class="response-summary">${summaryText}</span>
+                    </div>
+                `;
+
+                item.addEventListener('click', () => {
+                    selectResponse(idx);
+                    updateResponseListSelection();
+                });
+
+                responseList.appendChild(item);
+            });
+        }
+
+        // Update selection state in response list
+        function updateResponseListSelection() {
+            const items = responseList.querySelectorAll('.response-item');
+            items.forEach((item, idx) => {
+                if (idx === selectedResponseIndex) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        // Render the plot
+        function renderPlot() {
+            if (!data || !data[currentExampleIndex]) return;
+
+            const example = data[currentExampleIndex];
+            const responses = example.responses;
+
+            if (viewMode === 'aggregate') {
+                renderAggregatePlot(responses);
+            } else {
+                renderAllLinesPlot(responses);
+            }
+        }
+
+        // Render all lines
+        function renderAllLinesPlot(responses) {
+            const traces = [];
+            // Map trace index -> response index for click handling
+            const traceToResponseMap = [];
+
+            // Think-end boundary (prob index) per response, for the boundary lines.
+            const boundaryByResponse = [];
+
+            responses.forEach((response, idx) => {
+                const probs = response.per_sentence_probabilities;
+                const x = Array.from({ length: probs.length }, (_, i) => i);
+
+                const isSelected = selectedResponseIndex === idx;
+                const color = colors[idx % colors.length];
+
+                // Detect think boundary: prob index = sentence index + 1
+                const thinkEndSentIdx = findThinkEndIndex(response.sentences);
+                const thinkBoundaryProbIdx = thinkEndSentIdx >= 0 ? thinkEndSentIdx + 1 : -1;
+                boundaryByResponse[idx] = thinkBoundaryProbIdx;
+
+                const baseSize = isSelected ? 10 : 6;
+                const starSize = isSelected ? 16 : 12;
+                const markerSizes = probs.map((_, i) => i === thinkBoundaryProbIdx ? starSize : baseSize);
+                const markerSymbols = probs.map((_, i) => i === thinkBoundaryProbIdx ? 'star' : 'circle');
+
+                // Ground truth line
+                traces.push({
+                    x: x,
+                    y: probs,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: `R${idx + 1}` + (showPredictions && hasPredictions ? ' (GT)' : ''),
+                    line: {
+                        color: color,
+                        width: isSelected ? 4 : 2,
+                    },
+                    marker: {
+                        size: markerSizes,
+                        color: color,
+                        symbol: markerSymbols,
+                    },
+                    opacity: selectedResponseIndex !== null && !isSelected ? 0.1 : 1,
+                    hovertemplate: `<b>Response ${idx + 1}` + (showPredictions && hasPredictions ? ' (Ground Truth)' : '') + `</b><br>` +
+                        `Sentence: %{x}<br>` +
+                        `Probability: %{y:.3f}<br>` +
+                        `<extra></extra>`,
+                });
+                traceToResponseMap.push(idx);
+
+                // Prediction line (dashed) if available and toggled on
+                if (showPredictions && hasPredictions && response.predicted_probabilities) {
+                    const predProbs = response.predicted_probabilities;
+                    const predX = Array.from({ length: predProbs.length }, (_, i) => i);
+
+                    const predBaseSize = isSelected ? 8 : 4;
+                    const predStarSize = isSelected ? 14 : 10;
+                    const predMarkerSizes = predProbs.map((_, i) => i === thinkBoundaryProbIdx ? predStarSize : predBaseSize);
+                    const predMarkerSymbols = predProbs.map((_, i) => i === thinkBoundaryProbIdx ? 'star-diamond' : 'diamond');
+
+                    traces.push({
+                        x: predX,
+                        y: predProbs,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: `R${idx + 1} (Probe)`,
+                        line: {
+                            color: color,
+                            width: isSelected ? 4 : 2,
+                            dash: 'dash',
+                        },
+                        marker: {
+                            size: predMarkerSizes,
+                            color: color,
+                            symbol: predMarkerSymbols,
+                        },
+                        opacity: selectedResponseIndex !== null && !isSelected ? 0.06 : 0.8,
+                        hovertemplate: `<b>Response ${idx + 1} (Probe Prediction)</b><br>` +
+                            `Sentence: %{x}<br>` +
+                            `Predicted: %{y:.3f}<br>` +
+                            `<extra></extra>`,
+                        legendgroup: `response_${idx}`,
+                        showlegend: true,
+                    });
+                    traceToResponseMap.push(idx);
+                }
+            });
+
+            // Vertical line at each response's think boundary. The selected
+            // response gets one bold, labeled "end of thinking" rule; the rest
+            // stay faint and unlabeled (deduplicated, and never drawn over the
+            // selected one).
+            const boundaryLine = (bIdx, bold) => ({
+                type: 'line',
+                x0: bIdx,
+                x1: bIdx,
+                y0: 0,
+                y1: 1,
+                xref: 'x',
+                yref: 'paper',
+                line: bold
+                    ? { color: '#fbbf24', width: 2, dash: 'dash' }
+                    : { color: 'rgba(255,255,255,0.12)', width: 1, dash: 'dot' },
+            });
+
+            const selBoundary = selectedResponseIndex !== null
+                ? boundaryByResponse[selectedResponseIndex] : -1;
+            const shapes = [];
+            const faintDrawn = new Set();
+            boundaryByResponse.forEach((bIdx, idx) => {
+                if (bIdx < 0 || idx === selectedResponseIndex) return;
+                if (bIdx === selBoundary || faintDrawn.has(bIdx)) return;
+                faintDrawn.add(bIdx);
+                shapes.push(boundaryLine(bIdx, false));
+            });
+            if (selBoundary >= 0) {
+                shapes.push(boundaryLine(selBoundary, true));
+            }
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(22,33,62,0.5)',
+                font: { color: '#eaeaea' },
+                xaxis: {
+                    title: 'Sentence Index',
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    zeroline: false,
+                },
+                yaxis: {
+                    title: 'Behavior Probability',
+                    range: [-0.05, 1.05],
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    zeroline: false,
+                },
+                shapes: shapes,
+                hovermode: 'closest',
+                showlegend: true,
+                legend: {
+                    bgcolor: 'rgba(0,0,0,0)',
+                    font: { size: 10 }
+                },
+                margin: { t: 60, r: 20, b: 50, l: 60 }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot('plot', traces, layout, config);
+
+            // Click a point: select its response (if needed) and lock that sentence.
+            // Clicking the already-locked point unlocks it.
+            document.getElementById('plot').on('plotly_click', (eventData) => {
+                if (eventData.points && eventData.points.length > 0) {
+                    const pt = eventData.points[0];
+                    const responseIdx = traceToResponseMap[pt.curveNumber];
+                    if (responseIdx === undefined || responseIdx >= responses.length) return;
+                    const sentenceIdx = pt.pointNumber; // x == prob/sentence index
+                    if (responseIdx === selectedResponseIndex && lockedSentenceIndex === sentenceIdx) {
+                        clearLock();
+                    } else {
+                        setLock(responseIdx, sentenceIdx);
+                    }
+                }
+            });
+
+            // Re-draw the locked arrow after a (re)render, e.g. switching back to
+            // All Lines while a sentence is locked.
+            drawLockedArrow();
+        }
+
+        // Helper: compute mean and std arrays from responses using a probability accessor
+        function computeMeanStd(responses, accessor) {
+            const maxLen = Math.max(...responses.map(r => accessor(r).length));
+            const means = [];
+            const stds = [];
+
+            for (let i = 0; i < maxLen; i++) {
+                const values = responses
+                    .filter(r => accessor(r).length > i)
+                    .map(r => accessor(r)[i]);
+                
+                if (values.length > 0) {
+                    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+                    const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
+                    const std = Math.sqrt(variance);
+                    means.push(mean);
+                    stds.push(std);
+                }
+            }
+
+            return { means, stds };
+        }
+
+        // Render aggregate (mean ± std) plot
+        function renderAggregatePlot(responses) {
+            // Ground truth stats
+            const gt = computeMeanStd(responses, r => r.per_sentence_probabilities);
+            const x = Array.from({ length: gt.means.length }, (_, i) => i);
+            const upperBound = gt.means.map((m, i) => Math.min(1, m + gt.stds[i]));
+            const lowerBound = gt.means.map((m, i) => Math.max(0, m - gt.stds[i]));
+
+            const traces = [
+                // GT Std band (filled area)
+                {
+                    x: [...x, ...x.slice().reverse()],
+                    y: [...upperBound, ...lowerBound.slice().reverse()],
+                    fill: 'toself',
+                    fillcolor: 'rgba(233, 69, 96, 0.2)',
+                    line: { color: 'transparent' },
+                    type: 'scatter',
+                    name: (showPredictions && hasPredictions ? 'GT ' : '') + '± Std Dev',
+                    hoverinfo: 'skip'
+                },
+                // GT Mean line
+                {
+                    x: x,
+                    y: gt.means,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: (showPredictions && hasPredictions ? 'Ground Truth ' : '') + 'Mean',
+                    line: { color: '#e94560', width: 3 },
+                    marker: { size: 8 },
+                    hovertemplate: `<b>` + (showPredictions && hasPredictions ? 'Ground Truth ' : '') + `Mean</b><br>` +
+                        `Sentence: %{x}<br>` +
+                        `Probability: %{y:.3f}<br>` +
+                        `<extra></extra>`
+                }
+            ];
+
+            // Add prediction aggregate if available and toggled on
+            if (showPredictions && hasPredictions) {
+                const predResponses = responses.filter(r => r.predicted_probabilities);
+                if (predResponses.length > 0) {
+                    const pred = computeMeanStd(predResponses, r => r.predicted_probabilities);
+                    const predX = Array.from({ length: pred.means.length }, (_, i) => i);
+                    const predUpper = pred.means.map((m, i) => Math.min(1, m + pred.stds[i]));
+                    const predLower = pred.means.map((m, i) => Math.max(0, m - pred.stds[i]));
+
+                    // Prediction Std band
+                    traces.push({
+                        x: [...predX, ...predX.slice().reverse()],
+                        y: [...predUpper, ...predLower.slice().reverse()],
+                        fill: 'toself',
+                        fillcolor: 'rgba(96, 165, 250, 0.15)',
+                        line: { color: 'transparent' },
+                        type: 'scatter',
+                        name: 'Probe ± Std Dev',
+                        hoverinfo: 'skip'
+                    });
+
+                    // Prediction Mean line
+                    traces.push({
+                        x: predX,
+                        y: pred.means,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Probe Mean',
+                        line: { color: '#60a5fa', width: 3, dash: 'dash' },
+                        marker: { size: 8, symbol: 'diamond' },
+                        hovertemplate: `<b>Probe Mean</b><br>` +
+                            `Sentence: %{x}<br>` +
+                            `Predicted: %{y:.3f}<br>` +
+                            `<extra></extra>`
+                    });
+                }
+            }
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(22,33,62,0.5)',
+                font: { color: '#eaeaea' },
+                xaxis: {
+                    title: 'Sentence Index',
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    zeroline: false,
+                },
+                yaxis: {
+                    title: 'Behavior Probability',
+                    range: [-0.05, 1.05],
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    zeroline: false,
+                },
+                hovermode: 'closest',
+                showlegend: true,
+                legend: { bgcolor: 'rgba(0,0,0,0)' },
+                margin: { t: 20, r: 20, b: 50, l: 60 }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot('plot', traces, layout, config);
+        }
+
+        // Select a response and show detail panel
+        function selectResponse(responseIndex) {
+            if (!data || !data[currentExampleIndex]) return;
+
+            const example = data[currentExampleIndex];
+            const response = example.responses[responseIndex];
+
+            // Switching response drops any locked sentence; a fresh panel is built
+            // unlocked, and setLock() (if any) re-applies the lock afterwards.
+            lockedSentenceIndex = null;
+            selectedResponseIndex = responseIndex;
+
+            // Build header with MAE if available
+            let headerText = `#${responseIndex + 1}`;
+            if (showPredictions && hasPredictions && response.response_mae !== undefined) {
+                headerText += ` (MAE: ${response.response_mae.toFixed(4)})`;
+            }
+            responseNumber.textContent = headerText;
+
+            // Build sentences view
+            sentencesContainer.innerHTML = '';
+
+            const probs = response.per_sentence_probabilities;
+            const predProbs = (showPredictions && hasPredictions && response.predicted_probabilities)
+                ? response.predicted_probabilities : null;
+            const sentences = response.sentences;
+
+            // Add base probability span
+            const baseSpan = createSentenceBlock(
+                0,
+                '[Base]',
+                probs[0],
+                null,
+                true,
+                predProbs ? predProbs[0] : null,
+                null
+            );
+            sentencesContainer.appendChild(baseSpan);
+
+            // Add separator after base
+            const baseSep = document.createElement('span');
+            baseSep.className = 'sentence-separator';
+            baseSep.textContent = ' → ';
+            sentencesContainer.appendChild(baseSep);
+
+            // Detect if any sentence contains the end-of-thinking tag
+            const thinkEndIdx = findThinkEndIndex(sentences);
+
+            // Add each sentence as inline span
+            sentences.forEach((sentence, idx) => {
+                const probBefore = probs[idx];
+                const probAfter = probs[idx + 1];
+                const predProbAfter = predProbs ? predProbs[idx + 1] : null;
+                const predProbBefore = predProbs ? predProbs[idx] : null;
+                const span = createSentenceBlock(idx + 1, sentence, probAfter, probBefore, false, predProbAfter, predProbBefore);
+                sentencesContainer.appendChild(span);
+
+                if (idx === thinkEndIdx) {
+                    const divider = document.createElement('span');
+                    divider.className = 'thinking-response-divider';
+                    sentencesContainer.appendChild(divider);
+                } else if (idx < sentences.length - 1) {
+                    sentencesContainer.appendChild(document.createTextNode(' '));
+                }
+            });
+
+            responsePanel.classList.add('visible');
+            renderPlot(); // Re-render to highlight selected line
+            updateResponseListSelection();
+        }
+
+        // Create a sentence span element (inline)
+        // predProbability and predProbBefore are optional (null when no predictions)
+        function createSentenceBlock(index, text, probability, probBefore, isBase, predProbability, predProbBefore) {
+            const span = document.createElement('span');
+            span.className = 'sentence-span';
+            if (isBase) {
+                span.classList.add('base-sentence');
+            }
+            span.dataset.index = index;
+
+            // Create the text content
+            const textNode = document.createTextNode(text);
+            span.appendChild(textNode);
+
+            // Create probability info (superscript style)
+            const probInfo = document.createElement('span');
+            probInfo.className = 'prob-info';
+
+            // If predictions are shown, add a label to distinguish GT vs Pred
+            if (predProbability !== null) {
+                const gtLabel = document.createElement('span');
+                gtLabel.className = 'gt-label';
+                gtLabel.textContent = 'GT:';
+                probInfo.appendChild(gtLabel);
+            }
+
+            const probValue = document.createElement('span');
+            probValue.className = 'prob-value';
+            probValue.textContent = probability.toFixed(2);
+            probInfo.appendChild(probValue);
+
+            if (!isBase && probBefore !== null) {
+                const change = probability - probBefore;
+                const diffEl = document.createElement('span');
+                diffEl.className = 'prob-diff';
+                if (change > 0) {
+                    diffEl.classList.add('positive');
+                    diffEl.textContent = `+${change.toFixed(2)}`;
+                } else if (change < 0) {
+                    diffEl.classList.add('negative');
+                    diffEl.textContent = change.toFixed(2);
+                } else {
+                    diffEl.textContent = `±0`;
+                }
+                probInfo.appendChild(diffEl);
+            }
+
+            // Add prediction probability if available
+            if (predProbability !== null) {
+                const sep = document.createElement('span');
+                sep.className = 'prob-separator';
+                sep.textContent = '|';
+                probInfo.appendChild(sep);
+
+                const predLabel = document.createElement('span');
+                predLabel.className = 'pred-label';
+                predLabel.textContent = 'P:';
+                probInfo.appendChild(predLabel);
+
+                const predValue = document.createElement('span');
+                predValue.className = 'pred-value';
+                predValue.textContent = predProbability.toFixed(2);
+                probInfo.appendChild(predValue);
+
+                if (!isBase && predProbBefore !== null) {
+                    const predChange = predProbability - predProbBefore;
+                    const predDiffEl = document.createElement('span');
+                    predDiffEl.className = 'pred-diff';
+                    if (predChange > 0) {
+                        predDiffEl.classList.add('positive');
+                        predDiffEl.textContent = `+${predChange.toFixed(2)}`;
+                    } else if (predChange < 0) {
+                        predDiffEl.classList.add('negative');
+                        predDiffEl.textContent = predChange.toFixed(2);
+                    } else {
+                        predDiffEl.textContent = `±0`;
+                    }
+                    probInfo.appendChild(predDiffEl);
+                }
+            }
+
+            span.appendChild(probInfo);
+
+            // Hover highlighting for sentence spans
+            span.addEventListener('mouseenter', () => {
+                highlightPointOnPlot(index);
+                span.classList.add('highlighted');
+            });
+
+            span.addEventListener('mouseleave', () => {
+                unhighlightPointOnPlot();
+                span.classList.remove('highlighted');
+            });
+
+            // Click to lock/unlock this sentence; mirrored on the plot.
+            span.addEventListener('click', () => {
+                if (selectedResponseIndex === null) return;
+                if (lockedSentenceIndex === index) {
+                    clearLock();
+                } else {
+                    setLock(selectedResponseIndex, index);
+                }
+            });
+
+            return span;
+        }
+
+        // Build one arrow-label annotation for a given sentence index / colour.
+        function arrowAnnotation(sentenceIndex, color) {
+            const y = data[currentExampleIndex].responses[selectedResponseIndex]
+                .per_sentence_probabilities[sentenceIndex];
+            return {
+                x: sentenceIndex,
+                y: y,
+                xref: 'x',
+                yref: 'y',
+                text: `Sentence ${sentenceIndex}`,
+                showarrow: true,
+                arrowhead: 2,
+                arrowsize: 1,
+                arrowwidth: 2,
+                arrowcolor: color,
+                ax: 0,
+                ay: -40,
+                font: { color: '#eaeaea', size: 12 },
+                bgcolor: 'rgba(22, 33, 62, 0.9)',
+                bordercolor: color,
+                borderwidth: 1,
+                borderpad: 4
+            };
+        }
+
+        // Highlight a point on the plot when hovering a sentence. If another
+        // sentence is locked, keep its blue arrow visible alongside the red one.
+        function highlightPointOnPlot(sentenceIndex) {
+            if (selectedResponseIndex === null) return;
+            const annotations = [];
+            if (lockedSentenceIndex !== null && lockedSentenceIndex !== sentenceIndex
+                && viewMode === 'all') {
+                annotations.push(arrowAnnotation(lockedSentenceIndex, '#60a5fa'));
+            }
+            annotations.push(arrowAnnotation(sentenceIndex, '#e94560'));
+            Plotly.relayout('plot', { annotations });
+        }
+
+        // Remove the transient hover arrow. If a sentence is locked (and we're in
+        // All Lines view), fall back to the persistent blue locked arrow.
+        function unhighlightPointOnPlot() {
+            if (lockedSentenceIndex !== null && viewMode === 'all') {
+                drawLockedArrow();
+            } else {
+                Plotly.relayout('plot', { annotations: [] });
+            }
+        }
+
+        // Draw the persistent blue arrow for the locked sentence (All Lines only).
+        function drawLockedArrow() {
+            if (lockedSentenceIndex === null || selectedResponseIndex === null) return;
+            if (viewMode !== 'all') return;
+            Plotly.relayout('plot', {
+                annotations: [arrowAnnotation(lockedSentenceIndex, '#60a5fa')]
+            });
+        }
+
+        // Mark exactly one sentence span as locked (or none).
+        function applyLockedSpanStyle() {
+            sentencesContainer.querySelectorAll('.sentence-span.locked')
+                .forEach(el => el.classList.remove('locked'));
+            if (lockedSentenceIndex === null) return;
+            const el = sentencesContainer.querySelector(
+                `.sentence-span[data-index="${lockedSentenceIndex}"]`);
+            if (el) el.classList.add('locked');
+        }
+
+        // Lock a (response, sentence) pair: switch response if needed, then mark
+        // the span and draw the blue arrow. No auto-scroll.
+        function setLock(responseIndex, sentenceIndex) {
+            if (responseIndex !== selectedResponseIndex) {
+                selectResponse(responseIndex); // rebuilds the panel, unlocked
+            }
+            lockedSentenceIndex = sentenceIndex;
+            applyLockedSpanStyle();
+            drawLockedArrow();
+        }
+
+        // Clear the lock everywhere (span + plot arrow).
+        function clearLock() {
+            lockedSentenceIndex = null;
+            applyLockedSpanStyle();
+            Plotly.relayout('plot', { annotations: [] });
+        }
+
+        // Tokens that mark the end of the thinking section (model-dependent)
+        const THINK_END_TOKENS = [
+            '</think>',
+            '<|end|><|start|>assistant<|channel|>final<|message|>',
+        ];
+
+        // Return the index of the sentence containing a think-end token, or -1
+        function findThinkEndIndex(sentences) {
+            if (!sentences) return -1;
+            return sentences.findIndex(s => THINK_END_TOKENS.some(tok => s.includes(tok)));
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
+                prevBtn.click();
+            } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
+                nextBtn.click();
+            } else if (e.key === 'Escape') {
+                if (lockedSentenceIndex !== null) {
+                    clearLock(); // first Esc unlocks; second closes the panel
+                } else {
+                    closePanel.click();
+                }
+            }
+        });
+
+        // Kick everything off.
+        bootstrap();
+    </script>
+</body>
+</html>
