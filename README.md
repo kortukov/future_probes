@@ -42,6 +42,7 @@ This data is saved in the `results/per_sentence_probabilities` directory.
 This is done in three steps - gather activations, train the probe and evaluate it.
 
 #### Gather Activations
+We gather activations at the token positions at the end of each sentence in CoT and the response, with the label being the probability of a future behavior.
 
 We run activation gathering for the training and test datasets.
 ```bash
@@ -93,6 +94,7 @@ uv run unsteered_generation.py --model_name deepseek-ai/DeepSeek-R1-Distill-Llam
 This saves results to `results/behavioral_stability/DeepSeek-R1-Distill-Llama-8B/base_model/myopic_reward/n100_nsamp10_l8192_gumbel_s-42_ss42_t1.0_results.json`.
 
 Steering with FPCG:
+
 **Positive steering**
 ```bash
 uv run future_probe_controlled_generation.py \
@@ -110,3 +112,40 @@ uv run future_probe_controlled_generation.py \
 --layer 25 \
 --verbose True --negative True
 ```
+
+
+## Comparison with activation-based steering
+As a baseline standard steering technique, we compute a difference-in-means steering vector and use it to steer the model. 
+
+We start by computing the difference-in-means steering vector from the same training data as before.
+Here, we take activations of all tokens of the response, and, unlike in FPCG, the label is a ground truth behavior label 1 or 0.
+Since this is a lot of activations, we compute the steering vector right away, without storing the activations.
+
+To compute the difference-in-means steering vector, run:
+```bash
+uv run compute_steering_vector.py --results_file results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_results.json --layer 25
+```
+
+We then use it for steering:
+
+**Positive activation steering**
+```bash
+uv run activation_steering.py \
+    --steering_vector results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_steering_vectors/layer25/diff_of_means_steering_vector.pt \
+    --results results/behavioral_stability/DeepSeek-R1-Distill-Llama-8B/base_model/myopic_reward/n100_nsamp10_l8192_gumbel_s-42_ss42_t1.0_results.json \
+    --multiplier 1.0 \
+    --mean_act_norm True \
+    --negative=False
+```
+
+**Negative activation steering**
+```bash
+uv run activation_steering.py \
+    --steering_vector results/per_sentence_probabilities/DeepSeek-R1-Distill-Llama-8B/myopic_reward/n100_nbase10_nsamp30_l8192_s42_t1.0_steering_vectors/layer25/diff_of_means_steering_vector.pt \
+    --results results/behavioral_stability/DeepSeek-R1-Distill-Llama-8B/base_model/myopic_reward/n100_nsamp10_l8192_gumbel_s-42_ss42_t1.0_results.json \
+    --multiplier 1.0 \
+    --mean_act_norm True \
+    --negative=True
+```
+Note the use of `--mean_act_norm True` flag. In experiments, we normalize the steering vector to the mean activation norm and then apply multipliers around 0.5-2.0.
+
