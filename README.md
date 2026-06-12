@@ -1,4 +1,9 @@
 # Predicting Future Behaviors in Reasoning Models Enables Better Steering
+[Evgenii Kortukov](https://kortukov.github.io/), [Piotr Komorowski](https://www.linkedin.com/in/piotr-komorowski/), [Florian Klein](https://www.linkedin.com/in/florian-klein-76a40a25a/), [Paula Engl](https://www.linkedin.com/in/paula-engl/), [Gabriele Sarti](https://gsarti.com/), [Seong Joon Oh](https://seongjoonoh.com/), [Sebastian Lapuschkin](https://iphome.hhi.de/lapuschkin/), [Wojciech Samek](https://iphome.hhi.de/samek/)
+
+**TL;DR:** Extracting latent LLM features that encode future behaviors enables a novel, non-invasive form of text-level steering.
+
+Read our paper here: [https://arxiv.org/abs/2606.11172](https://arxiv.org/abs/2606.11172)
 
 
 ![Teaser figure](./data/fpcg_teaser_v2_compressed.png)
