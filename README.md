@@ -18,6 +18,11 @@ To create the environment, run the following command in the project root:
 uv sync
 ```
 
+## Data and Demo
+- All data produced by this project can be downloaded from [HuggingFace](https://huggingface.co/future-probes).
+
+- Additionally, we provide [an interactive demo and data exploration tool](https://behavior-distributions-demo.github.io/).
+
 # Experiments
 
 ## Behavior Distribution Analysis
