@@ -154,3 +154,19 @@ uv run activation_steering.py \
 ```
 Note the use of `--mean_act_norm True` flag. In experiments, we normalize the steering vector to the mean activation norm and then apply multipliers around 0.5-2.0.
 
+
+## Citation
+
+If you build on this work, please cite our paper:
+
+```
+@misc{kortukov2026predictingfuturebehaviorsreasoning,
+      title={Predicting Future Behaviors in Reasoning Models Enables Better Steering},
+      author={Evgenii Kortukov and Piotr Komorowski and Florian Klein and Paula Engl and Gabriele Sarti and Seong Joon Oh and Sebastian Lapuschkin and Wojciech Samek},
+      year={2026},
+      eprint={2606.11172},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2606.11172},
+}
+```
