@@ -3,7 +3,7 @@
 
 **TL;DR:** Extracting latent LLM features that encode future behaviors enables a novel, non-invasive form of text-level steering.
 
-Read our paper here: [https://arxiv.org/abs/2606.11172](https://arxiv.org/abs/2606.11172)
+Read our paper here: [https://openreview.net/forum?id=48NnVTsirb](https://openreview.net/forum?id=48NnVTsirb)
 
 
 ![Teaser figure](./data/fpcg_teaser_v2_compressed.png)
