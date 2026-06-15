@@ -165,13 +165,11 @@ Note the use of `--mean_act_norm True` flag. In experiments, we normalize the st
 If you build on this work, please cite our paper:
 
 ```
-@misc{kortukov2026predictingfuturebehaviorsreasoning,
-      title={Predicting Future Behaviors in Reasoning Models Enables Better Steering},
-      author={Evgenii Kortukov and Piotr Komorowski and Florian Klein and Paula Engl and Gabriele Sarti and Seong Joon Oh and Sebastian Lapuschkin and Wojciech Samek},
-      year={2026},
-      eprint={2606.11172},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2606.11172},
+@inproceedings{kortukov2026predicting,
+title={Predicting Future Behaviors in Reasoning Models Enables Better Steering},
+author={Evgenii Kortukov and Piotr Komorowski and Florian Klein and Paula Engl and Gabriele Sarti and Seong Joon Oh and Sebastian Lapuschkin and Wojciech Samek},
+booktitle={Mechanistic Interpretability Workshop at ICML 2026},
+year={2026},
+url={https://openreview.net/forum?id=48NnVTsirb}
 }
 ```
